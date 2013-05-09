@@ -33,6 +33,7 @@
 (struct results-summary
         (uid->fv/hash
          uid->term/hash
+         uid-summaries
          ;; analysis results
          push-pop-web
          useless-ensures
@@ -53,7 +54,7 @@
   (match-define (list node->fv/hash summaries callers pre) cfa2-results)
 
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-  ;; uid hashes and procs
+  ;; uid hashes, procs, and summaries
 
   (define uid->fv/hash (make-uid->fv/hash node->fv/hash))
   (define uid->term/hash (make-uid->term/hash node->fv/hash))
@@ -61,12 +62,14 @@
   (define uid->fv (curry hash-ref uid->fv/hash))
   (define uid->term (curry hash-ref uid->term/hash))
 
+  (define uid-summaries (set-map summaries BP->pair-of-uid))
+
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;; push pop web
   (printf "generating push pop web ...\n") (flush-output)
 
   (define push-pop-web/uid
-    (time (webset-from-relation (set-map summaries BP->pair-of-uid))))
+    (time (webset-from-relation uid-summaries)))
   (define push-pop-web/readable
     (time (uid-webset->unparsed-webset uid->term push-pop-web/uid)))
 
@@ -149,6 +152,7 @@
 
   (results-summary uid->fv/hash
                    uid->term/hash
+                   uid-summaries
                    ;; analysis results
                    push-pop-web/uid
                    useless-ensures

@@ -1,6 +1,7 @@
 #lang racket
 
 (provide empty-digraph named-empty-digraph
+         set-global-node-attribute set-global-edge-attribute
          set-attribute add-edge add-node digraph->string)
 
 (module+ test (require rackunit))
@@ -9,10 +10,22 @@
 ;;                             [SetOf [Edge X]]
 ;;                             [SetOf [Node X]]
 ;;                             [SetOf [Digraph X]]
+;;                             Attribute-Hash
+;;                             Attribute-Hash
 ;;                             Attribute-Hash)
-(struct digraph (name edge-set node-set sub-graphs attributes))
-(define empty-digraph (digraph "G" (set) (set) (set) (hash)))
-(define (named-empty-digraph name) (digraph name (set) (set) (set) (hash)))
+(struct digraph (name edge-set
+                      node-set
+                      sub-graphs
+                      ;; attribute hashes
+                      node-attributes
+                      edge-attributes
+                      attributes))
+(define empty-digraph (digraph "G"
+                               (set) (set) (set)
+                               (hash) (hash) (hash)))
+(define (named-empty-digraph name) (digraph name
+                                            (set) (set) (set)
+                                            (hash) (hash) (hash)))
 
 ;; An [Edge X] is a (edge X X Attribute-Hash)
 (struct edge (from to attributes))
@@ -24,24 +37,45 @@
 
 (define (set-attribute g attribute value)
   (match g
-    ((digraph name es ns sgs attributes)
-     (digraph name es ns sgs (hash-set attributes attribute value)))))
+    ((digraph name es ns sgs node-attributes edge-attributes attributes)
+     (digraph name
+              es ns sgs
+              node-attributes edge-attributes (hash-set attributes attribute value)))))
+
+(define (set-global-node-attribute g attribute value)
+  (match g
+    ((digraph name es ns sgs node-attr edge-attr attributes)
+     (digraph name
+              es ns sgs
+              (hash-set node-attr attribute value) edge-attr attributes))))
+
+(define (set-global-edge-attribute g attribute value)
+  (match g
+    ((digraph name es ns sgs node-attr edge-attr attributes)
+     (digraph name
+              es ns sgs
+              node-attr (hash-set edge-attr attribute value) attributes))))
 
 (define (add-edge g from to [attributes (hash)])
   (match g
-    ((digraph name es ns sgs attr)
-     (digraph name (set-add es (edge from to attributes)) ns sgs attr))))
+    ((digraph name es ns sgs node-attr edge-attr attr)
+     (digraph name
+              (set-add es (edge from to attributes)) ns sgs
+              node-attr edge-attr attr))))
 
 (define (add-node g node-name [attributes (hash)])
   (match g
-    ((digraph graph-name es ns sgs attr)
-     (digraph graph-name es (set-add ns (node node-name attributes))
-              sgs attr))))
+    ((digraph graph-name es ns sgs node-attr edge-attr attr)
+     (digraph graph-name
+              es (set-add ns (node node-name attributes)) sgs
+              node-attr edge-attr attr))))
 
 (define (add-subgraph g sg)
   (match g
-    ((digraph name es ns sgs attr)
-     (digraph name es ns (set-add sgs sg) attr))))
+    ((digraph name es ns sgs node-attr edge-attr attr)
+     (digraph name
+              es ns (set-add sgs sg)
+               node-attr edge-attr attr))))
 
 (define (digraph->string g [indent ""])
   (graph->string g "digraph" indent))
@@ -66,39 +100,73 @@
 
   foo [color = \"0 0 255\", ];
   foo -> bar [];
+}\n")
+  (check-equal? (digraph->string
+                 (set-global-edge-attribute (add-edge empty-digraph
+                                                      'foo 'bar)
+                                            'foo "red"))
+"digraph G {
+  edge [foo = \"red\", ];
+  foo -> bar [];
 }\n"))
 
 (define (graph->string g keyword indent)
-  (match g
-    ((digraph name es ns sgs attr)
-     (string-append indent "digraph " name " {\n"
-                    (for/fold
-                        ((s ""))
-                        (((k v) attr))
-                      (string-append s
-                                     indent "  "
-                                     (attribute->string k v)
-                                     ";\n"))
-                    (for/fold
-                        ((s ""))
-                        ((sg sgs))
-                      (string-append s
-                                     indent
-                                     (graph->string sg
-                                                    "subgraph"
-                                                    (string-append "  " indent))
-                                     "\n"))
-                    (for/fold
-                        ((s ""))
-                        ((n ns))
+  (let ((sub-indent (string-append "  " indent)))
+    (match g
+      ((digraph name es ns sgs node-attr edge-attr attr)
+       (string-append indent keyword " " name " {\n"
+                      (for/fold
+                          ((s ""))
+                          (((k v) attr))
+                        (string-append s
+                                       sub-indent
+                                       (attribute->string k v)
+                                       ";\n"))
+                      (tagged-attribute-list "node" node-attr sub-indent)
+                      (tagged-attribute-list "edge" edge-attr sub-indent)
+                      (for/fold
+                          ((s ""))
+                          ((sg sgs))
+                        (string-append s
+                                       (graph->string sg
+                                                      "subgraph"
+                                                      sub-indent)
+                                       "\n"))
+                      (for/fold
+                          ((s ""))
+                          ((n ns))
 
-                      (string-append s indent "  " (node->string n) ";\n"))
-                    (for/fold
-                        ((s ""))
-                        ((e es))
-                      (string-append s indent "  " (edge->string e) ";\n"))
-                    "}\n"))))
+                        (string-append s sub-indent (node->string n) ";\n"))
+                      (for/fold
+                          ((s ""))
+                          ((e es))
+                        (string-append s sub-indent (edge->string e) ";\n"))
+                      indent "}\n")))))
 
+;; hash-empty? : [Hash Any Any] -> Boolean
+;;
+;; produces true if the given has has no key-value pairs
+(define (hash-empty? h)
+  (= 0 (hash-count h)))
+(module+ test
+  (check-true (hash-empty? (hash)))
+  (check-false (hash-empty? (hash 3 4))))
+
+;; tagged-attribute-list : String Attribute-Hash {Optional String} -> String
+;;
+;; Produces an attribute list with desired indentation and a "tag" a la "node"
+;; or "edge".
+(define (tagged-attribute-list tag attributes [indent ""])
+  (if (hash-empty? attributes)
+      ""
+      (string-append indent tag " " (attributes->attributes-list attributes) ";\n")))
+(module+ test
+  (check-equal? (tagged-attribute-list "edge" (hash))
+                "")
+  (check-equal? (tagged-attribute-list "edge" (hash 'foo 3))
+                "edge [foo = 3, ];\n")
+  (check-equal? (tagged-attribute-list "edge" (hash 'foo 3) "  ")
+                "  edge [foo = 3, ];\n"))
 
 (define (attribute->string k v)
   (string-append (symbol->string k) " = " (outputify v)))

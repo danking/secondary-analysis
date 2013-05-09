@@ -6,13 +6,13 @@
 
 (module+ test (require rackunit))
 
-;; a [Digraph X] is a (digraph Symbol
-;;                             [SetOf [Edge X]]
-;;                             [SetOf [Node X]]
-;;                             [SetOf [Digraph X]]
-;;                             Attribute-Hash
-;;                             Attribute-Hash
-;;                             Attribute-Hash)
+;; a Digraph is a (digraph Symbol
+;;                         [SetOf Edge]
+;;                         [SetOf Node]
+;;                         [SetOf Digraph]
+;;                         Attribute-Hash
+;;                         Attribute-Hash
+;;                         Attribute-Hash)
 (struct digraph (name edge-set
                       node-set
                       sub-graphs
@@ -27,12 +27,12 @@
                                             (set) (set) (set)
                                             (hash) (hash) (hash)))
 
-;; An [Edge X] is a (edge X X Attribute-Hash)
+;; An Edge is a (edge Symbol Symbol Attribute-Hash)
 (struct edge (from to attributes))
 
 ;; An Attribute-Hash is a [Hash String (U String Number Symbol)]
 
-;; A [Node X] is a (node Symbol Attribute-Hash)
+;; A Node is a (node Symbol Attribute-Hash)
 (struct node (name attributes))
 
 (define (set-attribute g attribute value)

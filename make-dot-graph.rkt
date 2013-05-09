@@ -53,11 +53,16 @@
               (term->node-name succ)
               (hash))))
 
-(define (shorten s)
-  (substring s 0 (min 100 (string-length s))))
-
-(define (textify t)
-  (shorten (term->string t)))
+;; valid-term? : Term -> Boolean
+;;
+;; A term is considered `valid' if its printed form has necessary information
+;; for understanding the pda. In the case of block and block* this is
+;; untrue.
+(define (valid-term? term)
+  (let ((i (pda-term-insn term)))
+    (not (or (block? i)
+             (block*? i)
+             (label? i)))))
 
 ;; string->left-aligned-string : String -> String
 ;;
@@ -88,13 +93,9 @@
         (name (term->node-name t)))
     (add-node g name (hash 'label text))))
 
-;; valid-term? : Term -> Boolean
-;;
-;; A term is considered `valid' if its printed form has necessary information
-;; for understanding the pda. In the case of block and block* this is
-;; untrue.
-(define (valid-term? term)
-  (let ((i (pda-term-insn term)))
-    (not (or (block? i)
-             (block*? i)
-             (label? i)))))
+(define (shorten s)
+  (substring s 0 (min 100 (string-length s))))
+
+(define (textify t)
+  (shorten (term->string t)))
+

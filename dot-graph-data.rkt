@@ -110,38 +110,50 @@
   foo -> bar [];
 }\n"))
 
+(define (subgraph->string g [indent ""])
+  (graph->string g "subgraph" indent))
+(module+ test
+  (check-equal? (subgraph->string (add-edge (named-empty-digraph "cluster")
+                                            'baz 'qux))
+"subgraph cluster {
+  baz -> qux [];
+}
+"))
+
 (define (graph->string g keyword indent)
   (let ((sub-indent (string-append "  " indent)))
     (match g
       ((digraph name es ns sgs node-attr edge-attr attr)
        (string-append indent keyword " " name " {\n"
-                      (for/fold
-                          ((s ""))
-                          (((k v) attr))
-                        (string-append s
-                                       sub-indent
-                                       (attribute->string k v)
-                                       ";\n"))
+                      ;; attributes
+                      (graph-attributes->string attr sub-indent)
                       (tagged-attribute-list "node" node-attr sub-indent)
                       (tagged-attribute-list "edge" edge-attr sub-indent)
-                      (for/fold
-                          ((s ""))
-                          ((sg sgs))
-                        (string-append s
-                                       (graph->string sg
-                                                      "subgraph"
-                                                      sub-indent)
-                                       "\n"))
-                      (for/fold
-                          ((s ""))
-                          ((n ns))
-
-                        (string-append s sub-indent (node->string n) ";\n"))
-                      (for/fold
-                          ((s ""))
-                          ((e es))
-                        (string-append s sub-indent (edge->string e) ";\n"))
+                      ;; subgraphs
+                      (subgraphs->string sgs sub-indent)
+                      ;; nodes and edges
+                      (indented-block sub-indent node->string ns)
+                      (indented-block sub-indent edge->string es)
                       indent "}\n")))))
+
+(define (subgraphs->string sub-graphs indent)
+  (indented-block ""
+                  (lambda (sg)
+                    (subgraph->string sg indent))
+                  sub-graphs
+                  "\n"))
+
+(define (graph-attributes->string attributes indent)
+  (for/fold
+      ((s ""))
+      (((k v) attributes))
+    (string-append s indent (attribute->string k v) ";\n")))
+
+(define (indented-block indent formatter elements [newline ";\n"])
+  (for/fold
+      ((s ""))
+      ((e elements))
+    (string-append s indent (formatter e) newline)))
 
 ;; hash-empty? : [Hash Any Any] -> Boolean
 ;;

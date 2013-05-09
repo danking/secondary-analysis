@@ -1,8 +1,9 @@
 #lang racket
 
 (require "make-dot-graph.rkt"
-         "dot-graph-data.rkt")
-(provide add-summary-edges)
+         "dot-graph-data.rkt"
+         "push-pop-webs.rkt")
+(provide add-summary-edges add-webset-edges)
 
 (define default-summary-edge-attributes
   (hash 'style "dashed" 'color "red"))
@@ -16,7 +17,7 @@
   (for/fold
       ((g g))
       ((sum summaries))
-    (add-uid-edge g (first sum) (second sum))))
+    (add-uid-edge (first sum) (second sum) g)))
 
 ;; add-uid-edge : UID UID Digraph -> Digraph
 ;;
@@ -35,7 +36,7 @@
   (for/fold
       ((g g))
       ((web webset))
-    (add-web-edges g web)))
+    (add-web-edges web g)))
 
 ;; add-web-edges : [Web UID UID] Digraph -> Digraph
 ;;
@@ -43,13 +44,13 @@
 (define (add-web-edges web g)
   (for*/fold
       ((g g))
-      ((from (web-pushes g))
-       (to (web-pops g)))
+      ((from (web-pushes web))
+       (to (web-pops web)))
     (add-web-edge from to g)))
 
 ;; add-web-edge : UID UID Digraph -> Digraph
 ;;
 ;; Adds an edge from the first UID to the second
-(define (add-web-edge form to g)
+(define (add-web-edge from to g)
   (add-edge g (uid->node-name from) (uid->node-name to)
             default-web-edge-attributes))

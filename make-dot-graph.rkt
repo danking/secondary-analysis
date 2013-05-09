@@ -71,7 +71,9 @@
 ;; untrue.
 (define (valid-term? term)
   (let ((i (pda-term-insn term)))
-    (not (or (block? i) (block*? i)))))
+    (not (or (block? i)
+             (block*? i)
+             (label? i)))))
 
 ;; add-valid-succ-edges : Digraph Term [SetOf Term] -> Digraph
 ;;

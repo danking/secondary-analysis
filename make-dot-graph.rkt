@@ -3,7 +3,7 @@
 (require "../pda-to-pda-risc/risc-enhanced/search.rkt"
          "../pda-to-pda-risc/risc-enhanced/data.rkt"
          "dot-graph-data.rkt")
-(provide make-dot-graph)
+(provide make-dot-graph term->node-name uid->node-name)
 
 ;; make-dot-graph : PDA-RISC -> Digraph
 ;;
@@ -73,8 +73,11 @@
   (string-replace s "\n" "\\l"))
 
 (define (term->node-name t)
+  (uid->node-name (get-uid (pda-term-insn t))))
+
+(define (uid->node-name uid)
   (string->symbol
-   (string-append "id" (number->string (get-uid (pda-term-insn t))))))
+   (string-append "id" (number->string uid))))
 
 ;; add-term-node : Digraph Term -> Digraph
 ;;

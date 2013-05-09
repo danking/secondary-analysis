@@ -88,6 +88,11 @@
   (string->symbol
    (string-append "id" (number->string (get-uid (pda-term-insn t))))))
 
+;; add-term-node : Digraph Term -> Digraph
+;;
+;; Converts a term into a digraph node representation. A term is represented by
+;; a node whose label is defined by `textify'. The `term->node-name' procedure
+;; produces a uniform naming scheme to allow matching nodes with edges.
 (define (add-term-node g t)
   (let ((text (textify t))
         (name (term->node-name t)))

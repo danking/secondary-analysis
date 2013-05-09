@@ -5,6 +5,10 @@
          "dot-graph-data.rkt")
 (provide make-dot-graph)
 
+;; make-dot-graph : PDA-RISC -> Digraph
+;;
+;; Produces a visually appealing Graphviz dot-langauge compatible Digraph from a
+;; pda-risc term by traversing the graph.
 (define (make-dot-graph pre)
   ;; combine : Term Digraph -> Digraph
   ;;
@@ -24,10 +28,30 @@
                     empty-graph-with-settings
                     (pda-risc-enh-initial-term pre))))
 
+;; make-8.5x11-graph : PDA-RISC -> Digraph
+;;
+;; Produces a digraph which will fit on one US letter page if using the
+;; Postscript output of dot
 (define (make-8.5x11-graph pre)
   (set-attribute (make-dot-graph pre)
                  'page
                  "8.5,11"))
+
+;; add-valid-succ-edges : Digraph Term [SetOf Term] -> Digraph
+;;
+;; Add to the digraph a representation of the terms in succs that are
+;; `valid-term?'. The representing nodes' names are defined by
+;; `term->node-name'. Their "styling", i.e. their label and color, is defined by
+;; `add-term-node'.
+(define (add-valid-succ-edges g t succs)
+  (for/fold
+      ((g g))
+      ((succ succs)
+       #:when (valid-term? succ))
+    (add-edge g
+              (term->node-name t)
+              (term->node-name succ)
+              (hash))))
 
 (define (shorten s)
   (substring s 0 (min 100 (string-length s))))
@@ -74,19 +98,3 @@
     (not (or (block? i)
              (block*? i)
              (label? i)))))
-
-;; add-valid-succ-edges : Digraph Term [SetOf Term] -> Digraph
-;;
-;; Add to the digraph a representation of the terms in succs that are
-;; `valid-term?'. The representing nodes' names are defined by
-;; `term->node-name'. Their "styling", i.e. their label and color, is defined by
-;; `add-term-node'.
-(define (add-valid-succ-edges g t succs)
-  (for/fold
-      ((g g))
-      ((succ succs)
-       #:when (valid-term? succ))
-    (add-edge g
-              (term->node-name t)
-              (term->node-name succ)
-              (hash))))

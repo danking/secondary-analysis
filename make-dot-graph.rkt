@@ -19,9 +19,25 @@
 (define (textify t)
   (shorten (term->string t)))
 
+;; string->left-aligned-string : String -> String
+;;
+;; Dot has three different escape sequences for newline. It uses \n, \l, and
+;; \r. These create center-aligned, left-aligned, and right-aligned lines,
+;; respectively.
+(define (string->left-aligned-string s)
+  (string-replace s "\n" "\\l"))
+
+;; term->string : Term -> String
+;;
+;; Converts a term into a string for dot labels by producing a s-expression,
+;; then using the pretty-printer to produce a string and then converts the
+;; string to a left-aligned string (by dot convetions).
+;;
 ;; uses the risc-enhnaced/data.rkt unparser
 (define term->string
-  (compose pretty-format pre-term->risc-sexp))
+  (compose string->left-aligned-string
+           pretty-format
+           pre-term->risc-sexp))
 
 (define (term->node-name t)
   (string->symbol

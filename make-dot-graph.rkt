@@ -16,7 +16,18 @@
            (succs (pda-term-succs t)))
       (add-valid-succ-edges g t succs)))
 
-  (folding-search combine empty-digraph (pda-risc-enh-initial-term pre)))
+  (let ((empty-graph-with-settings
+         (set-global-node-attribute empty-digraph
+                                    'fontname
+                                    "monospace")))
+    (folding-search combine
+                    empty-graph-with-settings
+                    (pda-risc-enh-initial-term pre))))
+
+(define (make-8.5x11-graph pre)
+  (set-attribute (make-dot-graph pre)
+                 'page
+                 "8.5,11"))
 
 (define (shorten s)
   (substring s 0 (min 100 (string-length s))))

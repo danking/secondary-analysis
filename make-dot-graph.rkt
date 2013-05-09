@@ -59,10 +59,12 @@
 ;; for understanding the pda. In the case of block and block* this is
 ;; untrue.
 (define (valid-term? term)
-  (let ((i (pda-term-insn term)))
-    (not (or (block? i)
-             (block*? i)
-             (label? i)))))
+  #t
+  ;; (let ((i (pda-term-insn term)))
+  ;;   (not (or (block? i)
+  ;;            (block*? i)
+  ;;            (label? i))))
+  )
 
 ;; string->left-aligned-string : String -> String
 ;;

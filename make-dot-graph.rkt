@@ -72,18 +72,6 @@
 (define (string->left-aligned-string s)
   (string-replace s "\n" "\\l"))
 
-;; term->string : Term -> String
-;;
-;; Converts a term into a string for dot labels by producing a s-expression,
-;; then using the pretty-printer to produce a string and then converts the
-;; string to a left-aligned string (by dot convetions).
-;;
-;; uses the risc-enhnaced/data.rkt unparser
-(define term->string
-  (compose string->left-aligned-string
-           pretty-format
-           pre-term->risc-sexp))
-
 (define (term->node-name t)
   (string->symbol
    (string-append "id" (number->string (get-uid (pda-term-insn t))))))
@@ -98,9 +86,21 @@
         (name (term->node-name t)))
     (add-node g name (hash 'label text))))
 
-(define (shorten s)
-  (substring s 0 (min 100 (string-length s))))
-
 (define (textify t)
   (shorten (term->string t)))
+
+;; term->string : Term -> String
+;;
+;; Converts a term into a string for dot labels by producing a s-expression,
+;; then using the pretty-printer to produce a string and then converts the
+;; string to a left-aligned string (by dot convetions).
+;;
+;; uses the risc-enhnaced/data.rkt unparser
+(define term->string
+  (compose string->left-aligned-string
+           pretty-format
+           pre-term->risc-sexp))
+
+(define (shorten s)
+  (substring s 0 (min 100 (string-length s))))
 

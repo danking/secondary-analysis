@@ -84,7 +84,22 @@
 (define (add-term-node g t)
   (let ((text (textify t))
         (name (term->node-name t)))
-    (add-node g name (hash 'label text))))
+    (add-node g
+              name
+              (hash-set (term-specific-attributes t)
+                        'label text))))
+
+;; term-specific-attributes : Term -> Attribute-Hash
+;;
+;; This procedure allows us to give certain terms visually distinguishing
+;; attributes.
+(define (term-specific-attributes t)
+  (let ((i (pda-term-insn t)))
+    (cond [(push? i)
+           (hash 'shape "triangle")]
+          [(pop-assign? i)
+           (hash 'shape "invtriangle")]
+          [else (hash)])))
 
 (define (textify t)
   (shorten (term->string t)))

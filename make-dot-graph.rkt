@@ -6,10 +6,15 @@
 (provide make-dot-graph)
 
 (define (make-dot-graph pre)
+  ;; combine : Term Digraph -> Digraph
+  ;;
+  ;; Combine only adds the current term to the node set, but adds all the
+  ;; outgoing edges to the edge set. We don't add all the successors themselves
+  ;; to the node set now because they will be proccessed later.
   (define (combine t g)
     (let* ((g (add-term-node g t))
            (succs (pda-term-succs t)))
-      (add-succ-edges g t succs)))
+      (add-valid-succ-edges g t succs)))
 
   (folding-search combine empty-digraph (pda-risc-enh-initial-term pre)))
 
@@ -48,10 +53,26 @@
         (name (term->node-name t)))
     (add-node g name (hash 'label text))))
 
-(define (add-succ-edges g t succs)
+;; valid-term? : Term -> Boolean
+;;
+;; A term is considered `valid' if its printed form has necessary information
+;; for understanding the pda. In the case of block and block* this is
+;; untrue.
+(define (valid-term? term)
+  (let ((i (pda-term-insn term)))
+    (not (or (block? i) (block*? i)))))
+
+;; add-valid-succ-edges : Digraph Term [SetOf Term] -> Digraph
+;;
+;; Add to the digraph a representation of the terms in succs that are
+;; `valid-term?'. The representing nodes' names are defined by
+;; `term->node-name'. Their "styling", i.e. their label and color, is defined by
+;; `add-term-node'.
+(define (add-valid-succ-edges g t succs)
   (for/fold
       ((g g))
-      ((succ succs))
+      ((succ succs)
+       #:when (valid-term? succ))
     (add-edge g
               (term->node-name t)
               (term->node-name succ)

@@ -8,7 +8,7 @@
 (define default-summary-edge-attributes
   (hash 'style "dashed" 'color "red"))
 (define default-web-edge-attributes
-  (hash 'style "dotted" 'color "blue"))
+  (hash 'style "dotted" 'color "blue" 'dir "none"))
 
 ;; add-summary-edges : [SetOf [List UID UID]] Digraph -> Digraph
 ;;
@@ -40,7 +40,7 @@
 
 ;; add-web-edges : [Web UID UID] Digraph -> Digraph
 ;;
-;; Adds an edge from every push to every pop
+;; Adds an edge from every push to every pop and every pop to every push
 (define (add-web-edges web g)
   (for*/fold
       ((g g))

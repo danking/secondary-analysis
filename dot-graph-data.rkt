@@ -223,7 +223,13 @@
                 "from -> to [weight = 8, color = \"255 255 0\", ]"))
 
 (define (outputify v)
-  (cond [(string? v) (string-append "\"" v "\"")]
+  (cond [(string? v) (string-replace (format "~s" v)
+                                     ;; format will tfurn special \l character
+                                     ;; sequences into escaped \\l which
+                                     ;; prevents dot from properly aligning
+                                     ;; text
+                                     "\\\\l"
+                                     "\\l")]
         [(number? v) (number->string v)]
         [(symbol? v) (symbol->string v)]))
 (module+ test

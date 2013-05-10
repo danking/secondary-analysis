@@ -2,7 +2,8 @@
 
 (require "make-dot-graph.rkt"
          "dot-graph-data.rkt"
-         "push-pop-webs.rkt")
+         "push-pop-webs.rkt"
+         srfi/13)
 (provide add-summary-edges add-webset-edges add-webset-node-colorings)
 
 (module+ test (require rackunit))
@@ -73,7 +74,8 @@
   (for/fold
       ((g g))
       ((uid nodes))
-    (add-node g (uid->node-name uid) (hash 'color color))))
+    (add-node g (uid->node-name uid) (hash 'style "filled"
+                                           'fillcolor color))))
 
 ;; generate-colors : Natural -> [ListOf String]
 ;;
@@ -93,40 +95,41 @@
 
 (module+ test
   (check-equal? (generate-colors 0) empty)
-  (check-equal? (generate-colors 1) (list "255 0 0"))
-  (check-equal? (generate-colors 2) (list "255 0 0"
-                                          "0 255 0"))
-  (check-equal? (generate-colors 3) (list "255 0 0"
-                                          "0 255 0"
-                                          "0 0 255"))
-  (check-equal? (generate-colors 4) (list "127 0 0"
-                                          "255 0 0"
-                                          "0 255 0"
-                                          "0 0 255"))
-  (check-equal? (generate-colors 5) (list "127 0 0"
-                                          "255 0 0"
-                                          "0 127 0"
-                                          "0 255 0"
-                                          "0 0 255"))
-  (check-equal? (generate-colors 6) (list "127 0 0"
-                                          "255 0 0"
-                                          "0 127 0"
-                                          "0 255 0"
-                                          "0 0 127"
-                                          "0 0 255")))
+  (check-equal? (generate-colors 1) (list "#ff0000"))
+  (check-equal? (generate-colors 2) (list "#ff0000"
+                                          "#00ff00"))
+  (check-equal? (generate-colors 3) (list "#ff0000"
+                                          "#00ff00"
+                                          "#0000ff"))
+  (check-equal? (generate-colors 4) (list "#7f0000"
+                                          "#ff0000"
+                                          "#00ff00"
+                                          "#0000ff"))
+  (check-equal? (generate-colors 5) (list "#7f0000"
+                                          "#ff0000"
+                                          "#007f00"
+                                          "#00ff00"
+                                          "#0000ff"))
+  (check-equal? (generate-colors 6) (list "#7f0000"
+                                          "#ff0000"
+                                          "#007f00"
+                                          "#00ff00"
+                                          "#00007f"
+                                          "#0000ff")))
 
 ;; one-axis-rgb->string : Natural Natural -> [ListOf String]
 ;;
 ;; Given an axis value and an axis index, produce a dot-compatible RGB string
 (define (one-axis-rgb->string axis value)
-  (cond [(= axis 0) (string-append (number->string value) " 0 0")]
-        [(= axis 1) (string-append "0 " (number->string value) " 0")]
-        [(= axis 2) (string-append "0 0 " (number->string value))]))
+  (string-append
+   "#"
+   (string-pad (number->string (arithmetic-shift value (* 8 (- 2 axis))) 16)
+               6 #\0)))
 
 (module+ test
-  (check-equal? (one-axis-rgb->string 0 255 ) "255 0 0")
-  (check-equal? (one-axis-rgb->string 1 28) "0 28 0")
-  (check-equal? (one-axis-rgb->string 2 127) "0 0 127"))
+  (check-equal? (one-axis-rgb->string 0 255 ) "#ff0000")
+  (check-equal? (one-axis-rgb->string 1 32) "#002000")
+  (check-equal? (one-axis-rgb->string 2 127) "#00007f"))
 
 ;; partition-255 : Natural -> [ListOf Natural]
 ;;

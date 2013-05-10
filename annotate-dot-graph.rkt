@@ -3,7 +3,7 @@
 (require "make-dot-graph.rkt"
          "dot-graph-data.rkt"
          "push-pop-webs.rkt")
-(provide add-summary-edges add-webset-edges)
+(provide add-summary-edges add-webset-edges add-webset-node-colorings)
 
 (module+ test (require rackunit))
 

@@ -73,7 +73,7 @@
   (for/fold
       ((g g))
       ((n nodes))
-    (add-node g (uid->node-name uid) (hash 'color color)))))
+    (add-node g (uid->node-name uid) (hash 'color color))))
 
 ;; generate-colors : Natural -> [ListOf String]
 ;;

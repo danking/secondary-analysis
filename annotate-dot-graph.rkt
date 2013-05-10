@@ -8,7 +8,7 @@
 (define default-summary-edge-attributes
   (hash 'style "dashed" 'color "red"))
 (define default-web-edge-attributes
-  (hash 'style "dotted" 'color "blue" 'dir "none"))
+  (hash 'style "dotted" 'color "blue" 'dir "none" 'constraint "false"))
 
 ;; add-summary-edges : [SetOf [List UID UID]] Digraph -> Digraph
 ;;

@@ -69,10 +69,10 @@
                           color
                           g)))
 
-(define (add-nodes-with-color uid color g)
+(define (add-nodes-with-color nodes color g)
   (for/fold
       ((g g))
-      ((n nodes))
+      ((uid nodes))
     (add-node g (uid->node-name uid) (hash 'color color))))
 
 ;; generate-colors : Natural -> [ListOf String]

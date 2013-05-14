@@ -24,9 +24,9 @@
          (set-global-node-attribute empty-digraph
                                     'fontname
                                     "monospace")))
-    (folding-search combine
-                    empty-graph-with-settings
-                    (pda-risc-enh-initial-term pre))))
+    (folding-forward-search combine
+                            empty-graph-with-settings
+                            (pda-risc-enh-initial-term pre))))
 
 ;; make-8.5x11-graph : PDA-RISC -> Digraph
 ;;

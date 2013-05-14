@@ -93,12 +93,12 @@
   (printf "collecting reachable pushes ...\n") (flush-output)
 
   (define pushes/term
-    (time (folding-search (lambda (t pushes)
-                            (if (push? (pda-term-insn t))
-                                (cons t pushes)
-                                pushes))
-                          empty
-                          (pda-risc-enh-initial-term pre))))
+    (time (folding-forward-search (lambda (t pushes)
+                                    (if (push? (pda-term-insn t))
+                                        (cons t pushes)
+                                        pushes))
+                                  empty
+                                  (pda-risc-enh-initial-term pre))))
 
   (define pushes/insn
     (for/set ((t pushes/term))
@@ -109,12 +109,12 @@
   (printf "collecting reachable stack ensures ...\n") (flush-output)
 
   (define stack-ensures/term
-    (time (folding-search (lambda (t pushes)
-                            (if (stack-ensure? (pda-term-insn t))
-                                (cons t pushes)
-                                pushes))
-                          empty
-                          (pda-risc-enh-initial-term pre))))
+    (time (folding-forward-search (lambda (t pushes)
+                                    (if (stack-ensure? (pda-term-insn t))
+                                        (cons t pushes)
+                                        pushes))
+                                  empty
+                                  (pda-risc-enh-initial-term pre))))
 
   (define stack-ensures/insn
     (for/set ((t stack-ensures/term))
@@ -125,12 +125,12 @@
   (printf "collecting reachable pops ...\n") (flush-output)
 
   (define pop-assigns/term
-    (time (folding-search (lambda (t pushes)
-                            (if (pop-assign? (pda-term-insn t))
-                                (cons t pushes)
-                                pushes))
-                          empty
-                          (pda-risc-enh-initial-term pre))))
+    (time (folding-forward-search (lambda (t pushes)
+                                    (if (pop-assign? (pda-term-insn t))
+                                        (cons t pushes)
+                                        pushes))
+                                  empty
+                                  (pda-risc-enh-initial-term pre))))
 
   (define pop-assigns/insn
     (for/set ((t stack-ensures/term))

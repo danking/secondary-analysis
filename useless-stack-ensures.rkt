@@ -13,4 +13,4 @@
           useless-ensures
           (cons t useless-ensures))))
 
-  (folding-search combine empty (pda-risc-enh-initial-term pre)))
+  (folding-forward-search combine empty (pda-risc-enh-initial-term pre)))

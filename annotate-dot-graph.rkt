@@ -11,7 +11,7 @@
 (define default-summary-edge-attributes
   (hash 'style "dashed" 'color "red"))
 (define default-web-edge-attributes
-  (hash 'style "dotted" 'color "blue" 'dir "none" 'constraint "false"))
+  (hash 'style "dotted" 'color "blue" 'dir "none" 'constraint 'false))
 
 ;; add-summary-edges : [SetOf [List UID UID]] Digraph -> Digraph
 ;;
@@ -81,67 +81,65 @@
 ;;
 ;; produces n RGB color strings
 (define (generate-colors n)
-  (let* ((divisons-per-axis (exact-floor (/ n 3)))
-         (extra-divisons (modulo n 3))
-         (red-divisions (+ divisons-per-axis (if (> extra-divisons 0) 1 0)))
-         (green-divisions (+ divisons-per-axis (if (> extra-divisons 1) 1 0)))
-         (blue-divisions (+ divisons-per-axis (if (> extra-divisons 2) 1 0))))
-    (append (map (curry one-axis-rgb->string 0)
-                 (partition-255 red-divisions))
-            (map (curry one-axis-rgb->string 1)
-                 (partition-255 green-divisions))
-            (map (curry one-axis-rgb->string 2)
-                 (partition-255 blue-divisions)))))
+  (for/list ((color (partition-color-space n)))
+    (rgb-list->rgb-hex-string color)))
 
-(module+ test
-  (check-equal? (generate-colors 0) empty)
-  (check-equal? (generate-colors 1) (list "#ff0000"))
-  (check-equal? (generate-colors 2) (list "#ff0000"
-                                          "#00ff00"))
-  (check-equal? (generate-colors 3) (list "#ff0000"
-                                          "#00ff00"
-                                          "#0000ff"))
-  (check-equal? (generate-colors 4) (list "#7f0000"
-                                          "#ff0000"
-                                          "#00ff00"
-                                          "#0000ff"))
-  (check-equal? (generate-colors 5) (list "#7f0000"
-                                          "#ff0000"
-                                          "#007f00"
-                                          "#00ff00"
-                                          "#0000ff"))
-  (check-equal? (generate-colors 6) (list "#7f0000"
-                                          "#ff0000"
-                                          "#007f00"
-                                          "#00ff00"
-                                          "#00007f"
-                                          "#0000ff")))
+(define MINIMUM_COLOR_VALUE 25)
+(define MAXIMUM_COLOR_VALUE 230)
 
-;; one-axis-rgb->string : Natural Natural -> [ListOf String]
+;; rgb-list->rgb-hex-string : [List Natural Natural Natural] -> String
 ;;
-;; Given an axis value and an axis index, produce a dot-compatible RGB string
-(define (one-axis-rgb->string axis value)
-  (string-append
-   "#"
-   (string-pad (number->string (arithmetic-shift value (* 8 (- 2 axis))) 16)
-               6 #\0)))
+;; Converts a list representing a vector in RGB space into the corresponding
+;; rgb hex code string.
+(define (rgb-list->rgb-hex-string ls)
+  (string-append "#"
+                 (string-pad (number->string (first ls) 16) 2 #\0)
+                 (string-pad (number->string (second ls) 16) 2 #\0)
+                 (string-pad (number->string (third ls) 16) 2 #\0)))
 
 (module+ test
-  (check-equal? (one-axis-rgb->string 0 255 ) "#ff0000")
-  (check-equal? (one-axis-rgb->string 1 32) "#002000")
-  (check-equal? (one-axis-rgb->string 2 127) "#00007f"))
+  (check-equal? (rgb-list->rgb-hex-string '(255 255 255)) "#ffffff")
+  (check-equal? (rgb-list->rgb-hex-string '(255 0 255)) "#ff00ff")
+  (check-equal? (rgb-list->rgb-hex-string '(255 255 0)) "#ffff00")
+  (check-equal? (rgb-list->rgb-hex-string '(127 127 0)) "#7f7f00")
+  (check-equal? (rgb-list->rgb-hex-string '(32 32 32)) "#202020"))
 
-;; partition-255 : Natural -> [ListOf Natural]
+;; partition-color-space : Natural -> [SetOf [ListOf Natural]]
 ;;
-;; Partition the [0,255] number range into equal intervals. The result list
-;; (list A B C ...) represents the intervals [0, A], [A+1, B], [B+1, C], ...
-(define (partition-255 n)
-  (build-list n (lambda (i) (exact-floor (* (/ 255 n) (add1 i))))))
+;; Partitions RGB color space into total-blocks number of partitions.
+(define (partition-color-space total-blocks)
+  (let ((splits-per-side (exact-ceiling (expt total-blocks 1/3))))
+    (partition-hyper-cube MINIMUM_COLOR_VALUE
+                          MAXIMUM_COLOR_VALUE
+                          splits-per-side
+                          3)))
+
+;; patition-hyper-cube : Natural
+;;                       Natural
+;;                       Natural
+;;                       Natural
+;;                       ->
+;;                       [SetOf [ListOf Natural]]
+;;
+;; Parition a dims-dimensional hyper-cube positioned at (min, min, min, ...)
+;; with a side length of (- max min) into splits^3 equal-sized hyper-cubes.
+(define (partition-hyper-cube min max splits dims)
+  (if (= dims 0)
+      (set empty)
+      (let* ((range (- max min))
+             (step (/ range splits))
+             (tails (partition-hyper-cube min max splits (sub1 dims))))
+        (for*/set ((i (in-range 0 splits))
+                   (tail tails))
+          (let ((divider (+ min (exact-floor (* (add1 i) step)))))
+            (cons divider tail))))))
 
 (module+ test
-  (check-equal? (partition-255 0) empty)
-  (check-equal? (partition-255 1) (list 255))
-  (check-equal? (partition-255 2) (list 127 255))
-  (check-equal? (partition-255 3) (list 85 170 255))
-  (check-equal? (partition-255 4) (list 63 127 191 255)))
-
+  (check-equal? (partition-hyper-cube 0 10 2 0)
+                (set '()))
+  (check-equal? (partition-hyper-cube 0 10 2 1)
+                (set '(5) '(10)))
+  (check-equal? (partition-hyper-cube 4 10 2 1)
+                (set '(7) '(10)))
+  (check-equal? (partition-hyper-cube 0 10 2 2)
+                (set '(5 5) '(5 10) '(10 5) '(10 10))))

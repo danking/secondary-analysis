@@ -20,8 +20,10 @@
 ;; A [Results-Summary FV] is a
 ;; (results-summary [UID -> FV]
 ;;                  [UID -> Term]
+;;                  [SetOf [List UID UID]]
 ;;                  [Web UID UID]
 ;;                  [ListOf Term]
+;;                  PDA-RISC
 ;;                  PDA-RISC
 ;;                  [ListOf Term]
 ;;                  [ListOf Term]
@@ -50,7 +52,7 @@
 ;; standard-overview : [CFA2-Results FV]
 ;;                     ->
 ;;                     [Results-Summary FV]
-(define (standard-overview cfa2-results)
+(define (standard-overview cfa2-results logfile)
   (match-define (list node->fv/hash summaries callers pre) cfa2-results)
 
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -120,7 +122,7 @@
     (for/set ((t stack-ensures/term))
       (pda-term-insn t)))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;; collect reachable pops
   (printf "collecting reachable pops ...\n") (flush-output)
 
@@ -139,16 +141,19 @@
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;; statistics
 
-  (printf "=> Push Pop Web\n")
-  (pretty-print push-pop-web/readable)
-  (printf "=> Number of paths: ~a\n" (hash-count node->fv/hash))
-  (printf "=> Number of summaries: ~a\n" (set-count summaries))
-  (printf "=> Number of callers: ~a\n" (set-count callers))
-  (printf "=> Number of webs: ~a\n" (set-count push-pop-web/uid))
-  (printf "=> Number of reachable pushes: ~a\n" (length pushes/term))
-  (printf "=> Number of reachable pops: ~a\n" (length pop-assigns/term))
-  (printf "=> Number of reachable stack ensures: ~a\n" (length stack-ensures/term))
-  (printf "=> Number of useless stack ensures: ~a\n" (length useless-ensures))
+  (define output
+    `((push-pop-web ,push-pop-web/readable)
+      (paths ,(hash-count node->fv/hash))
+      (summaries ,(set-count summaries))
+      (callers ,(set-count callers))
+      (webs ,(set-count push-pop-web/uid))
+      (reachable-pushes ,(length pushes/term))
+      (reachable-pops ,(length pop-assigns/term))
+      (reachable-stack-ensures ,(length stack-ensures/term))
+      (useless-stack-ensures) ,(length useless-ensures)))
+
+  (with-output-to-file logfile
+    (lambda () (pretty-print output)))
 
   (results-summary uid->fv/hash
                    uid->term/hash

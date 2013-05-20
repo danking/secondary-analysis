@@ -1,9 +1,6 @@
 #lang racket
 
-(require (only-in "../cfa2/cfa2.rkt" BP)
-         (only-in "../pda-to-pda-risc/risc-enhanced/data.rkt"
-                  get-uid pda-term-insn)
-         "push-pop-webs.rkt")
+(require "push-pop-webs.rkt")
 
 (provide find-missing-pushes find-missing-pops)
 

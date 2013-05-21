@@ -4,6 +4,7 @@
          "summaries-to-webset.rkt"
          "useless-stack-ensures.rkt"
          "uid-procs.rkt"
+         "term-results.rkt"
 
          "../pda-to-pda-risc/risc-enhanced/search.rkt"
 
@@ -49,31 +50,21 @@
 ;; way to get the standard statistics on the cfa2 results. It should work, but
 ;; often times the defined identifiers are actually nice to have on hand.
 
-;; standard-overview : [CFA2-Results FV]
+;; standard-overview : Term-Resutls
+;;                     PDA-RISC-ENH
+;;                     String
 ;;                     ->
 ;;                     [Results-Summary FV]
-(define (standard-overview cfa2-results logfile)
-  (match-define (list node->fv/hash summaries callers pre) cfa2-results)
-
+(define (standard-overview term-results pre logfile)
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;; uid hashes, procs, and summaries
 
-  (define uid->fv/hash (make-uid->fv/hash node->fv/hash))
-  (define uid->term/hash (make-uid->term/hash node->fv/hash))
-
-  (define uid->fv (curry hash-ref uid->fv/hash))
-  (define uid->term (curry hash-ref uid->term/hash))
-
-  (define uid-summaries (set-map summaries BP->pair-of-uid))
+  (define uid->fv/hash (term-results-uid->fv/hash term-results))
+  (define uid->term/hash (term-results-uid->term/hash term-results))
 
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;; push pop web
   (printf "generating push pop web ...\n") (flush-output)
-
-  (define push-pop-web/uid
-    (time (webset-from-relation uid-summaries)))
-  (define push-pop-web/readable
-    (time (uid-webset->unparsed-webset uid->term push-pop-web/uid)))
 
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;; useless stack ensures
@@ -142,24 +133,23 @@
   ;; statistics
 
   (define output
-    `((push-pop-web ,push-pop-web/readable)
-      (paths ,(hash-count node->fv/hash))
-      (summaries ,(set-count summaries))
-      (callers ,(set-count callers))
-      (webs ,(set-count push-pop-web/uid))
+    `((push-pop-web ,(term-results-push-pop-web term-results))
+      (summaries ,(set-count (term-results-summaries term-results)))
+      (callers ,(set-count (term-results-callers term-results)))
+      (webs ,(set-count (term-results-push-pop-web term-results)))
       (reachable-pushes ,(length pushes/term))
       (reachable-pops ,(length pop-assigns/term))
       (reachable-stack-ensures ,(length stack-ensures/term))
-      (useless-stack-ensures) ,(length useless-ensures)))
+      (useless-stack-ensures ,(length useless-ensures))))
 
   (with-output-to-file logfile
     (lambda () (pretty-print output)))
 
   (results-summary uid->fv/hash
                    uid->term/hash
-                   uid-summaries
+                   (term-results-summaries term-results)
                    ;; analysis results
-                   push-pop-web/uid
+                   (term-results-push-pop-web term-results)
                    useless-ensures
                    ;; modified pdarisc and specific terms
                    pre

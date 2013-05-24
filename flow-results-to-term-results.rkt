@@ -4,7 +4,7 @@
          "../pda-to-pda-risc/risc-enhanced/data.rkt"
          "push-pop-webs.rkt"
          "../semantics/flow.rkt"
-         "../../../lattice/lattice.rkt"
+         "../lattice/lattice.rkt"
          "../cfa2/bp.rkt")
 
 (provide flow-results->term-results

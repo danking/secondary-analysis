@@ -4,7 +4,7 @@
          "../pda-to-pda-risc/risc-enhanced/data.rkt"
          "push-pop-webs.rkt"
          "../semantics/flow.rkt"
-         "../cfa2/lattice.rkt"
+         "../../../lattice/lattice.rkt"
          "../cfa2/bp.rkt")
 
 (provide flow-results->term-results
@@ -75,7 +75,7 @@
                     (flow-state-flow-value flow-state))))
 
 ;; update-fv-hash : [Hash A FlowValue]
-;;                  [Lattice FlowValue]
+;;                  [Bounded-Lattice FlowValue]
 ;;                  A
 ;;                  FlowValue
 ;;                  ->
@@ -85,7 +85,7 @@
             index
             ((lattice-join lattice) (hash-ref fv-hash
                                               index
-                                              (lattice-top lattice))
+                                              (bounded-lattice-top lattice))
                                     new-fv)))
 
 ;; make-uid->term : [SetOf FlowState] -> [Hash UID PDA-Term]

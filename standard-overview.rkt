@@ -140,7 +140,10 @@
       (reachable-pushes ,(length pushes/term))
       (reachable-pops ,(length pop-assigns/term))
       (reachable-stack-ensures ,(length stack-ensures/term))
-      (useless-stack-ensures ,(length useless-ensures))))
+      (useless-stack-ensures ,(length useless-ensures))
+      #;(uid->fv ,uid->fv/hash)
+      #;(uid->term ,uid->term/hash)
+      ))
 
   (with-output-to-file logfile
     (lambda () (pretty-print output)))

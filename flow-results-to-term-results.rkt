@@ -85,7 +85,7 @@
             index
             ((lattice-join lattice) (hash-ref fv-hash
                                               index
-                                              (bounded-lattice-top lattice))
+                                              (bounded-lattice-bottom lattice))
                                     new-fv)))
 
 ;; make-uid->term : [SetOf FlowState] -> [Hash UID PDA-Term]
